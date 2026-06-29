@@ -1,0 +1,115 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_msnweather": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "atul_sharedmsnweather_0c49a"
+        },
+        "api": {
+          "name": "shared_msnweather"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        },
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "metadata": {
+            "operationMetadataId": "94c91795-eadd-4ac8-9d08-c258d657f348"
+          },
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Scope": {
+          "actions": {
+            "Get_forecast_for_today": {
+              "runAfter": {},
+              "metadata": {
+                "operationMetadataId": "e5934926-8bd0-41dc-8be9-b8964595a242"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_msnweather",
+                  "operationId": "TodaysForecast",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_msnweather"
+                },
+                "parameters": {
+                  "Location": "@string('Delhi')",
+                  "units": "C"
+                },
+                "authentication": {
+                  "type": "Raw",
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_variable": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7d7c95d1-45ea-4570-b3c4-a4e0652c21e9"
+          },
+          "type": "Scope"
+        },
+        "Initialize_variable": {
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "e3f96837-debf-486b-8f93-ab1bdca648b0"
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "var01",
+                "type": "string",
+                "value": "@{string('')}"
+              }
+            ]
+          }
+        },
+        "Set_variable": {
+          "runAfter": {
+            "Scope": [
+              "Failed"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ba803174-e964-4112-b1c3-e97aadb21e56"
+          },
+          "type": "SetVariable",
+          "inputs": {
+            "name": "var01",
+            "value": "@outputs('Get_forecast_for_today')?['body/responses/daily/day/summary']"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
